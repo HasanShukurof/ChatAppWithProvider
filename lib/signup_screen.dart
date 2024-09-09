@@ -38,34 +38,62 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<String> _uploadImage(File image) async {
-    final uuid = Uuid();
-    final uniqueId = uuid.v4();
-    final ref = _storage.ref().child("user_images").child("${uniqueId}.jpeg");
+    try {
+      final uuid = Uuid();
+      final uniqueId = uuid.v4();
+      final ref =
+          FirebaseStorage.instance.ref().child("user_images/${uniqueId}.jpeg");
 
-    await ref.putFile(image);
-
-    return await ref.getDownloadURL();
+      await ref.putFile(image);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      print("Dosya yükleme hatası: $e");
+      rethrow; // Hatayı yukarı fırlat
+    }
   }
 
   Future<void> signUp() async {
-    UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text, password: _passwordController.text);
+    if (_image == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lütfen bir profil resmi seçin')),
+      );
+      return;
+    }
 
-    final imageUrl = await _uploadImage(_image!);
-    await _firestore.collection('users').doc(userCredential.user!.uid).set({
-      'uid': userCredential.user!.uid,
-      'name': _nameController.text,
-      'email': _emailController.text,
-      'password': _passwordController.text,
-      'imageUrl': imageUrl
-    });
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lütfen tüm alanları doldurun')),
+      );
+      return;
+    }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
-      ),
-    );
+    try {
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+              email: _emailController.text, password: _passwordController.text);
+
+      final imageUrl = await _uploadImage(_image!);
+
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'uid': userCredential.user!.uid,
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'imageUrl': imageUrl
+      });
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Kayıt sırasında bir hata oluştu: $e')),
+      );
+    }
   }
 
   @override
@@ -153,25 +181,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   signUp();
-                  // try {
-                  //   authProvider.signUp(
-                  //       _emailController.text,
-                  //       _passwordController.text,
-                  //       _nameController.text,
-                  //       "imageUrl");
-                  // } catch (e) {
-                  //   print(e);
-                  // }
-                  // if (_nameController.text.isNotEmpty &&
-                  //     _emailController.text.isNotEmpty &&
-                  //     _passwordController.text.isNotEmpty) {
-                  //   Navigator.pushReplacement(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //       builder: (context) => const HomeScreen(),
-                  //     ),
-                  //   );
-                  // }
                 },
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
