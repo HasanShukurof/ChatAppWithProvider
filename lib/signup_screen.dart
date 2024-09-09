@@ -103,6 +103,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       appBar: AppBar(
         title: const Text("Sign Up"),
         centerTitle: true,
+        backgroundColor: const Color.fromARGB(197, 33, 149, 243),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

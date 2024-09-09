@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         title: const Text("Login"),
         centerTitle: true,
-        backgroundColor: Colors.amber,
+        backgroundColor: const Color.fromARGB(197, 33, 149, 243),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
